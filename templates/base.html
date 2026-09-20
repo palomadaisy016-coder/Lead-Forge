@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05070f" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eceffa" media="(prefers-color-scheme: light)">
+<meta name="mobile-web-app-capable" content="content=yes">
+<title>{{ app_name }} — {% block title %}Dashboard{% endblock %}</title>
+
+<script>
+(function () {
+  var d = document.documentElement;
+  var s = {};
+  try { s = JSON.parse(localStorage.getItem('lf.theme') || '{}'); } catch (e) {}
+  var mode = s.mode || 'system';
+  var dark = mode === 'system'
+    ? matchMedia('(prefers-color-scheme: dark)').matches
+    : mode === 'dark';
+  d.setAttribute('data-theme', dark ? 'dark' : 'light');
+  d.setAttribute('data-glass',   s.glass   || 'balanced');
+  d.setAttribute('data-blur',    s.blur    || 'medium');
+  d.setAttribute('data-border',  s.border  || 'medium');
+  d.setAttribute('data-shadow',  s.shadow  || 'medium');
+  d.setAttribute('data-radius',  s.radius  || 'round');
+  d.setAttribute('data-density', s.density || 'comfortable');
+  d.setAttribute('data-bg',      s.bg      || 'gradient');
+  d.setAttribute('data-motion',  s.motion  || 'full');
+  if (s.accent) {
+    d.style.setProperty('--accent', s.accent);
+    d.style.setProperty('--accent-2', s.accent2 || s.accent);
+    if (s.accentRgb)  d.style.setProperty('--accent-rgb', s.accentRgb);
+    if (s.accent2Rgb) d.style.setProperty('--accent-2-rgb', s.accent2Rgb);
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_version('css/style.css') }}">
+<link rel="icon" href="{{ url_for('static', filename='img/logo-icon.png') }}">
+</head>
+<body>
+
+<div class="ambient" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+  <g id="i-dashboard" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7.5" height="7.5" rx="2.2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2.2"/>
+    <rect x="3" y="13.5" width="7.5" height="7.5" rx="2.2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2.2"/>
+  </g>
+  <g id="i-lead-finder" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7"/><path d="m16.3 16.3 4.4 4.4"/>
+  </g>
+  <g id="i-ai-research" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11 3.2 12.7 8l4.8 1.7-4.8 1.7L11 16.2 9.3 11.4 4.5 9.7 9.3 8Z"/>
+    <path d="M18 14.6l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7Z"/>
+  </g>
+  <g id="i-hot-leads" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.8c2.4 2.3 4.7 4.9 4.7 8.2a4.7 4.7 0 0 1-9.4 0c0-1.5.6-3 1.7-4.2.1 1.4.9 2.2 1.9 2.2 1.2 0 1.8-1 1.5-2.5-.2-1.3-.5-2.6-.4-3.7Z"/>
+  </g>
+  <g id="i-intent-leads" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><path d="M9 9a4.2 4.2 0 0 1 6 0"/><path d="M6.3 6.3a8.2 8.2 0 0 1 11.4 0"/><path d="M12 12 18 6"/>
+  </g>
+  <g id="i-all-leads" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1.3"/><circle cx="4.5" cy="12" r="1.3"/><circle cx="4.5" cy="18" r="1.3"/>
+  </g>
+  <g id="i-pipeline" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="5" height="16" rx="1.8"/><rect x="10" y="4" width="5" height="11" rx="1.8"/><rect x="17" y="4" width="4.5" height="7" rx="1.8"/>
+  </g>
+  <g id="i-lead-map" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 10.2c0 5.3-8 11.8-8 11.8S4 15.5 4 10.2a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/>
+  </g>
+  <g id="i-opportunities" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18.2 8.6a6.2 6.2 0 1 0-12.4 0c0 6.2-2.3 7.4-2.3 7.4h17s-2.3-1.2-2.3-7.4Z"/><path d="M10.3 19.5a2.2 2.2 0 0 0 3.4 0"/>
+  </g>
+  <g id="i-exports" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v11"/><path d="m7.5 10 4.5 4.5L16.5 10"/><path d="M4 16.5v2.7A1.8 1.8 0 0 0 5.8 21h12.4a1.8 1.8 0 0 0 1.8-1.8v-2.7"/>
+  </g>
+  <g id="i-ai-assistant" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 14.5a3 3 0 0 1-3 3H9l-5 3.2V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3Z"/><path d="M12 7.2l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9Z"/>
+  </g>
+  <g id="i-analytics" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.5 20.5h17"/><path d="M6.5 20.5V12"/><path d="M12 20.5V4.5"/><path d="M17.5 20.5v-6"/>
+  </g>
+  <g id="i-sources" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 3v5M15 3v5"/><path d="M6.5 8h11v3.2a5.5 5.5 0 0 1-11 0Z"/><path d="M12 16.7V21"/>
+  </g>
+  <g id="i-settings" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 6h9M19 6h1.5M4 12h4M14 12h6.5M4 18h9M19 18h1.5"/>
+    <circle cx="16" cy="6" r="2.3"/><circle cx="11" cy="12" r="2.3"/><circle cx="16" cy="18" r="2.3"/>
+  </g>
+  <g id="i-menu" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></g>
+  <g id="i-close" fill="none" stroke="currentColor" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></g>
+  <g id="i-more" fill="currentColor">
+    <circle cx="6" cy="6" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="18" cy="6" r="1.6"/>
+    <circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/>
+    <circle cx="6" cy="18" r="1.6"/><circle cx="12" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/>
+  </g>
+  <g id="i-sun" fill="none" stroke="currentColor" stroke-linecap="round">
+    <circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/>
+  </g>
+  <g id="i-moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20.5 14.8A8.6 8.6 0 0 1 9.2 3.5a8.6 8.6 0 1 0 11.3 11.3Z"/>
+  </g>
+  <g id="i-theme" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 20v-5.5M6 9.5V4M12 20v-9M12 6.5V4M18 20v-3.5M18 11.5V4"/>
+    <circle cx="6" cy="12" r="2.2"/><circle cx="12" cy="8.8" r="2.2"/><circle cx="18" cy="14" r="2.2"/>
+  </g>
+  <g id="i-bell" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18.2 8.6a6.2 6.2 0 1 0-12.4 0c0 6.2-2.3 7.4-2.3 7.4h17s-2.3-1.2-2.3-7.4Z"/><path d="M10.3 19.5a2.2 2.2 0 0 0 3.4 0"/>
+  </g>
+  <g id="i-database" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="5.8" rx="7.5" ry="3"/><path d="M4.5 5.8v12.4c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V5.8"/><path d="M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3"/>
+  </g>
+  <g id="i-mail" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.8 7 7.1 5.2a2 2 0 0 0 2.2 0L20.2 7"/>
+  </g>
+  <g id="i-phone" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 3.5h3l1.5 4-2 1.5a12 12 0 0 0 5.5 5.5l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 5 5.7 2 2 0 0 1 7 3.5Z"/>
+  </g>
+  <g id="i-building" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 21V5.5A1.5 1.5 0 0 1 5.5 4h7A1.5 1.5 0 0 1 14 5.5V21"/><path d="M14 10h4.5A1.5 1.5 0 0 1 20 11.5V21"/>
+    <path d="M7.2 8h3.6M7.2 12h3.6M7.2 16h3.6M17 14h.8M17 18h.8"/><path d="M2.8 21h18.4"/>
+  </g>
+  <g id="i-check" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></g>
+  <g id="i-target" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.3"/>
+  </g>
+  <g id="i-gauge" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 17a9 9 0 1 1 16 0"/><path d="m12 13.5 3.8-3.8"/><circle cx="12" cy="15" r="1.6"/>
+  </g>
+  <g id="i-logout" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
+  </g>
+</defs>
+</svg>
+
+{% macro nav_links(extra_class='') -%}
+  {% for item in sidebar_items %}
+    <a href="{{ '/dashboard' if item.slug == 'dashboard' else '/' + item.slug }}"
+       class="nav-item {{ extra_class }} {% if item.slug == active_slug %}active{% endif %}"
+       {% if item.slug == active_slug %}aria-current="page"{% endif %}>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-{{ item.slug }}"></use></svg>
+      <span class="nav-label">{{ item.label }}</span>
+    </a>
+  {% endfor %}
+{%- endmacro %}
+
+<div class="shell">
+
+  <aside class="rail glass-4" id="rail">
+    <div class="brand">
+      <img src="{{ url_for('static', filename='img/logo-icon.png') }}" alt="">
+      <div class="brand-text">
+        <div class="brand-name">{{ app_name }}</div>
+        <div class="brand-sub">Lead intelligence</div>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Main">
+      {{ nav_links() }}
+    </nav>
+
+    <div class="rail-foot">
+      <strong>{{ app_name }}</strong><br>
+      Built by {{ creator_name }}
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar glass-4">
+      <button class="icon-btn" id="rail-toggle" aria-label="Collapse navigation">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-menu"></use></svg>
+      </button>
+
+      <div class="topbar-title">{% block page_heading %}Dashboard{% endblock %}</div>
+
+      <label class="search">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lead-finder"></use></svg>
+        <span class="sr-only">Search leads and companies</span>
+        <input type="search" id="global-search" placeholder="Search leads, companies…" autocomplete="off">
+        <kbd>/</kbd>
+      </label>
+
+      <button class="icon-btn" id="theme-quick" aria-label="Switch between light and dark">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sun" id="theme-quick-icon"></use></svg>
+      </button>
+      <button class="icon-btn" id="studio-open" aria-label="Open appearance settings" aria-expanded="false">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-theme"></use></svg>
+      </button>
+      <a class="avatar" href="{{ url_for('logout') }}"
+         title="Signed in as {{ current_user_name or 'you' }} — click to log out">{{ current_user_initials or 'U' }}</a>
+    </header>
+
+    <main class="page" id="main-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<aside class="drawer glass-4" id="drawer" aria-label="Main" aria-hidden="true">
+  <div class="brand">
+    <img src="{{ url_for('static', filename='img/logo-icon.png') }}" alt="">
+    <div class="brand-text">
+      <div class="brand-name">{{ app_name }}</div>
+      <div class="brand-sub">Lead intelligence</div>
+    </div>
+    <button class="icon-btn" id="drawer-close" style="margin-left:auto" aria-label="Close navigation">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>
+    </button>
+  </div>
+  <nav class="nav">{{ nav_links() }}</nav>
+  <div class="rail-foot"><strong>{{ app_name }}</strong><br>Built by {{ creator_name }}</div>
+</aside>
+
+<nav class="tabbar glass-4" aria-label="Quick navigation">
+  {% for item in sidebar_items if item.slug in ['dashboard', 'lead-finder', 'hot-leads', 'all-leads'] %}
+    <a class="tab {% if item.slug == active_slug %}active{% endif %}"
+       href="{{ '/dashboard' if item.slug == 'dashboard' else '/' + item.slug }}">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-{{ item.slug }}"></use></svg>
+      {{ item.label }}
+    </a>
+  {% endfor %}
+  <button class="tab" id="more-open" aria-label="More sections">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-more"></use></svg>
+    More
+  </button>
+</nav>
+
+<section class="sheet glass-3" id="more-sheet" aria-label="All sections" aria-hidden="true">
+  <div class="sheet-grip"></div>
+  <div class="sheet-title">All sections</div>
+  <div class="sheet-grid">{{ nav_links() }}</div>
+  <a class="btn btn-block" style="margin-top:14px" href="{{ url_for('logout') }}">
+    <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-logout"></use></svg>
+    Log out
+  </a>
+</section>
+
+<section class="sheet studio glass-3" id="studio" aria-label="Appearance" aria-hidden="true">
+  <div class="sheet-grip"></div>
+  <div class="sheet-title">Appearance</div>
+
+  <div class="field">
+    <div class="field-label"><span>Theme</span></div>
+    <div class="seg" data-setting="mode">
+      <button type="button" data-value="light">Light</button>
+      <button type="button" data-value="dark">Dark</button>
+      <button type="button" data-value="system">System</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span>Accent</span><span id="accent-name">Forge Blue</span></div>
+    <div class="swatches" id="swatches"></div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span>Glass</span></div>
+    <div class="seg" data-setting="glass">
+      <button type="button" data-value="subtle">Subtle</button>
+      <button type="button" data-value="balanced">Balanced</button>
+      <button type="button" data-value="strong">Strong</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span>Blur</span></div>
+    <div class="seg" data-setting="blur">
+      <button type="button" data-value="low">Low</button>
+      <button type="button" data-value="medium">Medium</button>
+      <button type="button" data-value="high">High</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span>Borders</span></div>
+    <div class="seg" data-setting="border">
+      <button type="button" data-value="subtle">Subtle</button>
+      <button type="button" data-value="medium">Medium</button>
+      <button type="button" data-value="strong">Strong</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span>Shadows</span></div>
+    <div class="seg" data-setting="shadow">
+      <button type="button" data-value="soft">Soft</button>
+      <button type="button" data-value="medium">Medium</button>
+      <button type="button" data-value="deep">Deep</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span>Corners</span></div>
+    <div class="seg" data-setting="radius">
+      <button type="button" data-value="sharp">Sharp</button>
+      <button type="button" data-value="round">Round</button>
+      <button type="button" data-value="soft">Soft</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span>Density</span></div>
+    <div class="seg" data-setting="density">
+      <button type="button" data-value="compact">Compact</button>
+      <button type="button" data-value="comfortable">Comfortable</button>
+      <button type="button" data-value="spacious">Spacious</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span>Background</span></div>
+    <div class="seg" data-setting="bg">
+      <button type="button" data-value="minimal">Minimal</button>
+      <button type="button" data-value="gradient">Gradient</button>
+      <button type="button" data-value="aurora">Aurora</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span>Motion</span></div>
+    <div class="seg" data-setting="motion">
+      <button type="button" data-value="off">Off</button>
+      <button type="button" data-value="subtle">Subtle</button>
+      <button type="button" data-value="full">Full</button>
+    </div>
+  </div>
+
+  <div class="studio-actions">
+    <button class="btn" id="studio-reset" type="button">Reset</button>
+    <button class="btn btn-primary" id="studio-done" type="button">Done</button>
+  </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/app.js') }}?v={{ asset_version('js/app.js') }}"></script>
+</body>
+</html>
