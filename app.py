@@ -51,7 +51,9 @@ Phase 10 (this update) adds the real "Opportunities" page:
     open one) and also logged onto that lead's own activity timeline.
 """
 
+import csv
 import functools
+import io
 import os
 
 from flask import Flask, render_template, request, redirect, url_for, session
@@ -615,6 +617,81 @@ def save_found_leads():
         skipped_duplicates=skipped_duplicates,
         flagged_for_review=flagged_for_review,
     ))
+
+
+# ============================================================================
+# IMPORT LEADS - free directory sources (Procore Network, The Blue Book)
+# ============================================================================
+# These two sites can't be reached directly from PythonAnywhere's free
+# plan (see procore_finder.py for why), so instead of searching them
+# live, you run a small script on your own computer that saves a CSV
+# file, then upload that CSV here. Every row goes through the same
+# duplicate check as every other lead source before it's saved.
+
+IMPORT_ALLOWED_COLUMNS = {
+    "lead_type", "status", "company_name", "contact_name", "email",
+    "phone", "website", "city", "state", "country", "industry",
+    "services_needed", "lead_source", "notes", "profile_url",
+}
+
+
+@app.route("/leads/import", methods=["GET", "POST"])
+@login_required
+def import_leads():
+    error = None
+    saved = 0
+    skipped_duplicates = 0
+    flagged_for_review = 0
+    total_rows = 0
+
+    if request.method == "POST":
+        upload = request.files.get("csv_file")
+        if not upload or not upload.filename:
+            error = "Choose a CSV file first."
+        elif not upload.filename.lower().endswith(".csv"):
+            error = "That doesn't look like a CSV file."
+        else:
+            try:
+                text = upload.stream.read().decode("utf-8-sig")
+                reader = csv.DictReader(io.StringIO(text))
+                rows = list(reader)
+            except Exception:
+                rows = None
+                error = "Couldn't read that file. Make sure it's the CSV new_leads.csv created by procore_finder.py."
+
+            if rows is not None:
+                total_rows = len(rows)
+                for row in rows:
+                    lead_data = {
+                        k: v for k, v in row.items()
+                        if k in IMPORT_ALLOWED_COLUMNS and v
+                    }
+                    lead_data.setdefault("lead_type", "company")
+                    lead_data.setdefault("status", "new")
+                    if not lead_data.get("company_name"):
+                        continue
+
+                    result = find_match(lead_data)
+                    if result["match"] == "confident":
+                        skipped_duplicates += 1
+                        continue
+                    if result["match"] == "uncertain":
+                        flag = (
+                            f"POSSIBLE DUPLICATE of lead #{result['lead_id']} "
+                            f"({result['reason']}). "
+                        )
+                        lead_data["notes"] = flag + (lead_data.get("notes") or "")
+                        flagged_for_review += 1
+
+                    create_lead(lead_data)
+                    saved += 1
+
+    return render_page(
+        "import_leads.html", "lead-finder",
+        error=error, saved=saved, total_rows=total_rows,
+        skipped_duplicates=skipped_duplicates,
+        flagged_for_review=flagged_for_review,
+    )
 
 
 # ============================================================================
