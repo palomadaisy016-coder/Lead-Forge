@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Lead Finder{% endblock %}
+{% block page_heading %}Lead Finder{% endblock %}
+
+{% block content %}
+
+<section class="panel glass-2">
+  <div class="panel-head">
+    <h2>Find companies</h2>
+    <span class="badge accent">Free · OpenStreetMap</span>
+  </div>
+  <p style="color:var(--text-2);margin-top:0;max-width:60ch">
+    Searches OpenStreetMap's free public business directory for real
+    companies matching an industry near a location - no account, no key,
+    no paid data. Every result shows what OpenStreetMap actually has on
+    record for it. Nothing is added to All Leads until you pick which
+    results to keep below.
+  </p>
+
+  <form method="POST" action="{{ url_for('lead_finder') }}" class="lead-filter-bar">
+    <input class="form-input" type="text" name="industry"
+           placeholder="Industry or trade, e.g. electrician, architect, roofer…"
+           value="{{ industry }}" required>
+    {% include "lead_finder_location_fields.html" %}
+    <input class="form-input" type="text" name="services"
+           placeholder="Services you sell (optional, for your own reference)"
+           value="{{ services }}">
+    <button class="btn btn-primary" type="submit">Search</button>
+  </form>
+
+  {% if error %}
+    <div class="form-error" role="alert" style="margin-top:var(--s-3)">
+      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true" style="flex:0 0 auto"><use href="#i-close"></use></svg>
+      {{ error }}
+    </div>
+  {% endif %}
+</section>
+
+{% if candidates %}
+  <section class="panel glass-2" style="margin-top:var(--s-3)">
+    <form method="POST" action="{{ url_for('save_found_leads') }}">
+      <div class="panel-head">
+        <h2>Results for "{{ industry }}" near "{{ location }}"</h2>
+        <span class="badge accent">{{ candidates|length }} {{ "company" if candidates|length == 1 else "companies" }} found</span>
+        <button class="btn btn-primary" type="submit" style="margin-left:auto">Save selected</button>
+      </div>
+
+      {% for c in candidates %}
+        <div class="panel glass-1" style="margin-bottom:var(--s-2)">
+          <label style="display:flex;align-items:flex-start;gap:var(--s-2);cursor:pointer">
+            <input type="checkbox" name="save" value="{{ loop.index0 }}" style="margin-top:6px" checked>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <strong>{{ c.company_name }}</strong>
+                <span class="type-badge company">Company</span>
+              </div>
+
+              <div class="lead-subtext" style="margin-top:6px">
+                {{ [c.city, c.state] | select | join(', ') or "Location not on record" }}
+              </div>
+
+              <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--text-2)">
+                <span>Phone: <strong>{{ c.phone or "—" }}</strong> ({{ c.quality.phone|lower }})</span>
+                <span>Website: <strong>{{ c.website or "—" }}</strong> ({{ c.quality.website|lower }})</span>
+                <span>Email: <strong>{{ c.email or "—" }}</strong> ({{ c.quality.email|lower }})</span>
+                <span>Address: {{ c.quality.address|lower }}</span>
+              </div>
+
+              {% if c.website %}
+                <div style="margin-top:6px">
+                  <a href="{{ c.website }}" target="_blank" rel="noopener">{{ c.website }}</a>
+                </div>
+              {% endif %}
+            </div>
+          </label>
+
+          <input type="hidden" name="company_name_{{ loop.index0 }}" value="{{ c.company_name }}">
+          <input type="hidden" name="phone_{{ loop.index0 }}" value="{{ c.phone }}">
+          <input type="hidden" name="website_{{ loop.index0 }}" value="{{ c.website }}">
+          <input type="hidden" name="email_{{ loop.index0 }}" value="{{ c.email }}">
+          <input type="hidden" name="city_{{ loop.index0 }}" value="{{ c.city }}">
+          <input type="hidden" name="state_{{ loop.index0 }}" value="{{ c.state }}">
+          <input type="hidden" name="industry_{{ loop.index0 }}" value="{{ c.industry }}">
+          <input type="hidden" name="services_{{ loop.index0 }}" value="{{ c.services_needed }}">
+          <input type="hidden" name="source_{{ loop.index0 }}" value="{{ c.lead_source }}">
+          <input type="hidden" name="notes_{{ loop.index0 }}" value="{{ c.notes }}">
+        </div>
+      {% endfor %}
+    </form>
+  </section>
+{% elif searched and not error %}
+  <section class="panel glass-2" style="margin-top:var(--s-3)">
+    <div class="empty" style="padding:var(--s-6) var(--s-3)">
+      <span class="empty-icon">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lead-finder"></use></svg>
+      </span>
+      <strong>No companies found</strong>
+      <p>Try a broader location, a more common way of describing the
+         trade, or a nearby larger city — OpenStreetMap's coverage
+         varies a lot by area.</p>
+    </div>
+  </section>
+{% endif %}
+
+{% endblock %}

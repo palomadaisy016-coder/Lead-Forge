@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}All Leads{% endblock %}
+{% block page_heading %}All Leads{% endblock %}
+
+{% block content %}
+
+<section class="panel glass-2">
+  <div class="panel-head">
+    <h2>All Leads</h2>
+    <span class="badge accent">{{ leads|length }} shown</span>
+    <a class="btn btn-primary" href="{{ url_for('new_lead') }}" style="margin-left:auto">+ Add lead</a>
+  </div>
+
+  <form method="GET" action="{{ url_for('all_leads') }}" class="lead-filter-bar">
+    <input class="form-input" type="search" name="q" placeholder="Search name, email, city, service…"
+           value="{{ search_q }}">
+
+    <select class="form-input" name="type" onchange="this.form.submit()">
+      <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All types</option>
+      <option value="company" {% if filter_type == 'company' %}selected{% endif %}>Company leads</option>
+      <option value="intent" {% if filter_type == 'intent' %}selected{% endif %}>Intent leads</option>
+    </select>
+
+    <select class="form-input" name="status" onchange="this.form.submit()">
+      <option value="all" {% if filter_status == 'all' %}selected{% endif %}>All statuses</option>
+      {% for s in statuses %}
+        <option value="{{ s }}" {% if filter_status == s %}selected{% endif %}>{{ status_labels[s] }}</option>
+      {% endfor %}
+    </select>
+
+    <button class="btn" type="submit">Filter</button>
+  </form>
+
+  {% if leads %}
+    <div class="lead-table-wrap">
+      <table class="lead-table">
+        <thead>
+          <tr>
+            <th>Score</th>
+            <th>Type</th>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Service / Industry</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lead in leads %}
+            <tr onclick="window.location='{{ url_for('lead_detail', lead_id=lead.id) }}'">
+              <td>
+                {% if lead.score is not none %}
+                  <span class="score-pill {% if lead.score >= 90 %}hot{% elif lead.score >= 60 %}warm{% else %}cool{% endif %}">{{ lead.score }}</span>
+                {% else %}
+                  <span class="score-pill cool">—</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="type-badge {{ lead.lead_type }}">
+                  {{ "Intent" if lead.lead_type == "intent" else "Company" }}
+                </span>
+              </td>
+              <td>
+                <strong>{{ lead.company_name or lead.contact_name or "Unnamed lead" }}</strong>
+                {% if lead.company_name and lead.contact_name %}
+                  <div class="lead-subtext">{{ lead.contact_name }}</div>
+                {% endif %}
+              </td>
+              <td>{{ [lead.city, lead.state] | select | join(', ') or "—" }}</td>
+              <td>{{ lead.requested_service or lead.industry or "—" }}</td>
+              <td><span class="status-pill status-{{ lead.status }}">{{ status_labels[lead.status] }}</span></td>
+              <td class="lead-row-arrow">→</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty" style="padding:var(--s-6) var(--s-3)">
+      <span class="empty-icon">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-all-leads"></use></svg>
+      </span>
+      <strong>No leads yet</strong>
+      <p>Add your first lead by hand to try out the database, or wait for
+         Lead Finder and Intent Leads to start filling this in automatically.</p>
+      <a class="btn btn-primary" href="{{ url_for('new_lead') }}">Add a lead</a>
+    </div>
+  {% endif %}
+</section>
+
+{% endblock %}

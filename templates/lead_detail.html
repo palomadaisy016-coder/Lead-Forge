@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ lead.company_name or lead.contact_name or "Lead" }}{% endblock %}
+{% block page_heading %}Lead profile{% endblock %}
+
+{% block content %}
+
+<div class="split">
+  <section class="panel glass-2">
+    <div class="panel-head">
+      <span class="type-badge {{ lead.lead_type }}">{{ "Intent lead" if lead.lead_type == "intent" else "Company lead" }}</span>
+      {% if lead.score is not none %}
+        <span class="score-pill {% if lead.score >= 90 %}hot{% elif lead.score >= 60 %}warm{% else %}cool{% endif %}">{{ lead.score }}</span>
+      {% endif %}
+      <a class="btn" href="{{ url_for('edit_lead', lead_id=lead.id) }}" style="margin-left:auto">Edit</a>
+      <form method="POST" action="{{ url_for('delete_lead_route', lead_id=lead.id) }}"
+            onsubmit="return confirm('Delete this lead permanently?');">
+        <button class="btn btn-ghost" type="submit">Delete</button>
+      </form>
+    </div>
+
+    <h2 style="margin:0 0 4px">{{ lead.company_name or lead.contact_name or "Unnamed lead" }}</h2>
+    {% if lead.company_name and lead.contact_name %}
+      <div class="lead-subtext" style="margin-bottom:var(--s-3)">Contact: {{ lead.contact_name }}</div>
+    {% endif %}
+
+    <div class="lead-fact-grid">
+      {% if lead.email %}<div><span>Email</span>{{ lead.email }}</div>{% endif %}
+      {% if lead.phone %}<div><span>Phone</span>{{ lead.phone }}</div>{% endif %}
+      {% if lead.website %}<div><span>Website</span>{{ lead.website }}</div>{% endif %}
+      {% if lead.city or lead.state %}<div><span>Location</span>{{ [lead.city, lead.state] | select | join(', ') }}</div>{% endif %}
+      {% if lead.industry %}<div><span>Industry</span>{{ lead.industry }}</div>{% endif %}
+      {% if lead.services_needed %}<div><span>Services</span>{{ lead.services_needed }}</div>{% endif %}
+      {% if lead.lead_source %}<div><span>Source</span>{{ lead.lead_source }}</div>{% endif %}
+      {% if lead.date_discovered %}<div><span>Discovered</span>{{ lead.date_discovered }}</div>{% endif %}
+    </div>
+
+    {% if lead.lead_type == 'intent' %}
+      <div class="panel glass-1" style="margin-top:var(--s-3)">
+        <div class="panel-head"><h2>Service request</h2></div>
+        <div class="lead-fact-grid">
+          {% if lead.requested_service %}<div><span>Requested service</span>{{ lead.requested_service }}</div>{% endif %}
+          {% if lead.potential_project_type %}<div><span>Project type</span>{{ lead.potential_project_type }}</div>{% endif %}
+          {% if lead.potential_urgency %}<div><span>Urgency</span>{{ lead.potential_urgency|capitalize }}</div>{% endif %}
+          {% if lead.intent_classification %}<div><span>AI classification</span>{{ lead.intent_classification }}</div>{% endif %}
+        </div>
+        {% if lead.post_text %}
+          <div class="lead-quote">"{{ lead.post_text }}"</div>
+        {% endif %}
+        {% if lead.post_url %}
+          <a class="btn" href="{{ lead.post_url }}" target="_blank" rel="noopener">View source</a>
+        {% endif %}
+        {% if lead.profile_url %}
+          <a class="btn" href="{{ lead.profile_url }}" target="_blank" rel="noopener">View profile</a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if lead.notes %}
+      <div class="panel glass-1" style="margin-top:var(--s-3)">
+        <div class="panel-head"><h2>Notes</h2></div>
+        <p style="margin:0;color:var(--text-2);line-height:1.6">{{ lead.notes }}</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="panel glass-2">
+    <div class="panel-head"><h2>Pipeline stage</h2></div>
+    <form method="POST" action="{{ url_for('change_lead_status', lead_id=lead.id) }}" style="display:flex;gap:8px;margin-bottom:var(--s-3)">
+      <select class="form-input" name="status" style="margin:0">
+        {% for s in statuses %}
+          <option value="{{ s }}" {% if lead.status == s %}selected{% endif %}>{{ status_labels[s] }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-primary" type="submit">Update</button>
+    </form>
+
+    <div class="panel-head"><h2>Add a note</h2></div>
+    <form method="POST" action="{{ url_for('add_lead_note', lead_id=lead.id) }}" style="margin-bottom:var(--s-3)">
+      <textarea class="form-input" name="note" rows="3" placeholder="Log a call, an email, anything worth remembering…" required></textarea>
+      <button class="btn btn-block" type="submit" style="margin-top:8px">Add note</button>
+    </form>
+
+    <div class="panel-head"><h2>Timeline</h2></div>
+    {% if activity %}
+      <div class="activity-list">
+        {% for entry in activity %}
+          <div class="activity-item">
+            <div class="activity-dot {{ entry.activity_type }}"></div>
+            <div>
+              <div class="activity-content">{{ entry.content }}</div>
+              <div class="activity-time">{{ entry.created_at }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:var(--text-3);font-size:13.5px">No activity yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+{% endblock %}
