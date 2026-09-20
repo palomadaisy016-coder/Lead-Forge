@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Opportunities{% endblock %}
+{% block page_heading %}Opportunities{% endblock %}
+
+{% block content %}
+
+<section class="panel glass-2">
+  <div class="panel-head">
+    <h2>Opportunities</h2>
+    <span class="badge accent">{{ opportunities|length }} open</span>
+    <form method="POST" action="{{ url_for('scan_opportunities') }}" style="margin-left:auto">
+      <button class="btn btn-primary" type="submit">Scan for opportunities</button>
+    </form>
+  </div>
+
+  <p class="pipeline-hint">
+    Rereads every lead's own website for an explicitly stated hiring,
+    expansion, or new-project signal - only leads with a website on file
+    are checked, and nothing is invented: a lead is skipped if there's
+    nothing real on the page to point to.
+  </p>
+
+  {% if scan_error %}
+    <div class="form-error" role="alert" style="margin-bottom:var(--s-3)">
+      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true" style="flex:0 0 auto"><use href="#i-close"></use></svg>
+      {{ scan_error }}
+    </div>
+  {% elif found is not none %}
+    <div class="badge accent" style="margin-bottom:var(--s-3)">
+      Scan complete - {{ found }} new opportunit{{ "y" if found == 1 else "ies" }} found
+      {%- if skipped %}, {{ skipped }} lead{{ "s" if skipped != 1 else "" }} skipped{% endif %}
+    </div>
+  {% endif %}
+
+  {% if opportunities %}
+    <div class="opportunity-list">
+      {% for opp in opportunities %}
+        <article class="opportunity-card glass-1">
+          <div class="opportunity-top">
+            <span class="signal-badge {{ opp.signal_type }}">{{ signal_labels[opp.signal_type] }}</span>
+            <span class="lead-subtext">{{ opp.detected_at }}</span>
+          </div>
+
+          <a class="opportunity-company" href="{{ url_for('lead_detail', lead_id=opp.lead_id) }}">
+            {{ opp.company_name or opp.contact_name or "Unnamed lead" }}
+          </a>
+
+          <p class="opportunity-headline">{{ opp.headline }}</p>
+
+          {% if opp.why_it_matters %}
+            <div class="opportunity-why"><span>Why it matters</span>{{ opp.why_it_matters }}</div>
+          {% endif %}
+
+          <div class="lead-fact-grid" style="margin-top:var(--s-2)">
+            {% if opp.related_service %}
+              <div><span>Related service</span>{{ opp.related_service }}</div>
+            {% endif %}
+            <div>
+              <span>Source</span>
+              {% if opp.source_url %}
+                <a href="{{ opp.source_url }}" target="_blank" rel="noopener">{{ opp.source_label }}</a>
+              {% else %}
+                {{ opp.source_label }}
+              {% endif %}
+            </div>
+          </div>
+
+          {% if opp.evidence %}
+            <div class="lead-quote">"{{ opp.evidence }}"</div>
+          {% endif %}
+
+          <form method="POST" action="{{ url_for('dismiss_opportunity_route', opportunity_id=opp.id) }}" style="margin-top:var(--s-2)">
+            <button class="btn btn-ghost" type="submit">Dismiss</button>
+          </form>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty" style="padding:var(--s-6) var(--s-3)">
+      <span class="empty-icon">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-opportunities"></use></svg>
+      </span>
+      <strong>No opportunities yet</strong>
+      <p>Run a scan to reread your leads' own websites for a hiring,
+         expansion, or new-project signal.</p>
+    </div>
+  {% endif %}
+</section>
+
+{% endblock %}

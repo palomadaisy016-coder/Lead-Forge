@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Import Leads{% endblock %}
+{% block page_heading %}Import Leads{% endblock %}
+
+{% block content %}
+
+<section class="panel glass-2">
+  <div class="panel-head">
+    <h2>Import from a CSV file</h2>
+    <span class="badge accent">Free directories</span>
+  </div>
+  <p style="color:var(--text-2);margin-top:0;max-width:60ch">
+    For sources that can't be searched directly from this site (like the
+    Procore Construction Network or The Blue Book), run the matching
+    script on your own computer - it saves a file called
+    <code>new_leads.csv</code>. Upload that file here and every row goes
+    through the same duplicate check as every other lead.
+  </p>
+
+  <form method="POST" action="{{ url_for('import_leads') }}"
+        enctype="multipart/form-data" class="lead-filter-bar">
+    <input class="form-input" type="file" name="csv_file" accept=".csv" required>
+    <button class="btn btn-primary" type="submit">Import</button>
+  </form>
+
+  {% if error %}
+    <div class="form-error" role="alert" style="margin-top:var(--s-3)">
+      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true" style="flex:0 0 auto"><use href="#i-close"></use></svg>
+      {{ error }}
+    </div>
+  {% endif %}
+
+  {% if total_rows %}
+    <div class="panel glass-1" style="margin-top:var(--s-3);padding:var(--s-3)">
+      <p style="margin:0">
+        Read {{ total_rows }} row{{ 's' if total_rows != 1 else '' }} from the file.
+      </p>
+      <p style="margin:0.25em 0 0 0;color:var(--text-2)">
+        <strong>{{ saved }}</strong> new lead{{ 's' if saved != 1 else '' }} saved ·
+        <strong>{{ skipped_duplicates }}</strong> already on file, skipped ·
+        <strong>{{ flagged_for_review }}</strong> saved but flagged as a possible duplicate for you to check
+      </p>
+      <p style="margin-top:var(--s-2)">
+        <a class="btn btn-secondary" href="{{ url_for('all_leads') }}">View All Leads</a>
+      </p>
+    </div>
+  {% endif %}
+</section>
+
+{% endblock %}

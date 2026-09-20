@@ -1,0 +1,135 @@
+{#
+lead_finder_location_fields.html
+----------------------------------
+Drop-in replacement for the free-text "Location" input on the Lead
+Finder search form. Splits it into two dropdowns - State, then City -
+so a search can never accidentally cover a whole state (the cause of
+the "florida" timeout), never contain a misspelled city, and always
+sends Nominatim an exact "City, ST" string it can resolve reliably.
+
+HOW TO WIRE THIS UP
+--------------------
+1. In app.py, import the new locations module and pass it to whichever
+   route renders the Lead Finder search page:
+
+       import locations
+
+       @app.route("/lead-finder")
+       def lead_finder():
+           return render_template(
+               "lead_finder.html",
+               state_cities=locations.STATE_CITIES,
+           )
+
+2. In lead_finder.html, replace the existing free-text location
+   <input> with an include of this file:
+
+       {% include "lead_finder_location_fields.html" %}
+
+   (Adjust the path if your templates live in a subfolder.)
+
+3. The search form still posts a single "location" field, exactly like
+   before - it's just now built from the two dropdowns by the small
+   script below rather than typed freehand. No other change is needed
+   on the backend: overpass_engine.discover_companies() still receives
+   a plain "City, ST" string in `location`, same as it always has.
+
+This partial assumes it lives inside a <form> that already has other
+Lead Finder fields (industry, services, etc.) and a submit button, laid
+out as a flat row of ".form-input" elements (Lead Forge's
+".lead-filter-bar" pattern) - the two <select> elements below use that
+same class so they match the industry/services inputs on either side
+instead of introducing a different-looking control.
+#}
+
+<select id="lf-state" name="lf_state" class="form-input" aria-label="State" required>
+  <option value="" disabled selected>State...</option>
+  {% for state_name in state_cities.keys()|sort %}
+    <option value="{{ state_name }}">{{ state_name }}</option>
+  {% endfor %}
+</select>
+
+<select id="lf-city" name="lf_city" class="form-input" aria-label="City" required disabled>
+  <option value="" disabled selected>Select a state first...</option>
+</select>
+
+<!-- The actual field the search form submits - kept identical to the
+       old free-text input's name ("location") so no backend route or
+       form-handling code needs to change. Pre-filled with whatever the
+       page was rendered with (e.g. re-showing the same search after a
+       validation error), so a reload doesn't silently lose the pick. -->
+<input type="hidden" id="location" name="location" value="{{ location|default('') }}">
+
+<script>
+  // The full state -> city list, rendered once from locations.py via
+  // Jinja. This is the same data discover_companies() would otherwise
+  // have received as free-typed text - now it's an exact, pre-validated
+  // list instead.
+  const LEAD_FINDER_STATE_CITIES = {{ state_cities|tojson }};
+
+  (function () {
+    const stateSelect = document.getElementById("lf-state");
+    const citySelect = document.getElementById("lf-city");
+    const locationField = document.getElementById("location");
+
+    function populateCities(cities, selectedCity) {
+      citySelect.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.disabled = true;
+      placeholder.textContent = cities.length
+        ? "Select a city..."
+        : "No cities available";
+      if (!selectedCity) placeholder.selected = true;
+      citySelect.appendChild(placeholder);
+
+      cities.forEach(function (cityLabel) {
+        const opt = document.createElement("option");
+        opt.value = cityLabel; // already the exact "City, ST" string
+        opt.textContent = cityLabel;
+        if (cityLabel === selectedCity) opt.selected = true;
+        citySelect.appendChild(opt);
+      });
+
+      citySelect.disabled = cities.length === 0;
+    }
+
+    // Re-select the previous state/city on page load, if the form is
+    // being re-shown with a location already set (e.g. after an error).
+    const initialLocation = locationField.value;
+    if (initialLocation) {
+      for (const [stateName, cities] of Object.entries(LEAD_FINDER_STATE_CITIES)) {
+        if (cities.includes(initialLocation)) {
+          stateSelect.value = stateName;
+          populateCities(cities, initialLocation);
+          break;
+        }
+      }
+    }
+
+    stateSelect.addEventListener("change", function () {
+      const cities = LEAD_FINDER_STATE_CITIES[stateSelect.value] || [];
+      populateCities(cities, null);
+      locationField.value = "";
+    });
+
+    citySelect.addEventListener("change", function () {
+      // This is the exact string Nominatim/Overpass will search on -
+      // e.g. "Los Angeles, CA" - never a free-typed variant of it.
+      locationField.value = citySelect.value;
+    });
+
+    // Guard the parent form: don't let a submit go through with the
+    // hidden location field still empty (e.g. state picked, city not).
+    const form = stateSelect.closest("form");
+    if (form) {
+      form.addEventListener("submit", function (e) {
+        if (!locationField.value) {
+          e.preventDefault();
+          citySelect.reportValidity ? citySelect.reportValidity() :
+            alert("Please select both a state and a city.");
+        }
+      });
+    }
+  })();
+</script>
